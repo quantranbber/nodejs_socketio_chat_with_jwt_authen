@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+    <input type="text" id="username" autocomplete="off">
+    <input type="password" id="password" autocomplete="off">
+    <button id="connect">connect</button>
+    <button id="disconnect">disconnect</button>
+</body>
+<script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
+<script src="https://code.jquery.com/jquery-1.11.1.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
+<script>
+    $(function () {
+        var socket = io();
+        $('#disconnect').click(function(){
+            socket.disconnect();
+        });
+        $('#connect').click(function() {
+            socket = io.connect({'forceNew':true });
+            var data = {};
+            data.username = $("#username").val();
+            data.password = $("#password").val();
+            socket.emit('login', data);
+            socket.on('error-login', function() {
+                alert("Sai tên tài khoản hoặc mật khẩu!!");
+            });
+            socket.on('auth', function(token) {
+                $.cookie("jwt-token", token);
+            });
+            socket.on('redirect', function(destination) {
+                window.location.href = destination;
+            });
+        });
+        // $("form").submit(function () {
+        //     var data = {};
+        //     data.username = $("#username").val();
+        //     data.password = $("#password").val();
+        //     socket.emit('login', data);
+        //     socket.on('error-login', function() {
+        //         alert("Sai tên tài khoản hoặc mật khẩu!!");
+        //     });
+        //     socket.on('auth', function(token) {
+        //         $.cookie("jwt-token", token);
+        //     });
+        //     // socket.on('redirect', function(destination) {
+        //     //     window.location.href = destination;
+        //     // });
+        // })
+    })
+</script>
+</html>
