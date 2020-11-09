@@ -12,6 +12,30 @@
       p {
         margin: 0 !important;
       }
+      #header {
+        margin: 0 auto;
+        display: flex;
+        width: 100%;
+        max-width: 375px;
+        margin-top: 10vh;
+        padding: 20px 10px;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #2b303b;
+        border-radius: 10px;
+      }
+      ::-webkit-scrollbar {
+        width: 10px;
+      }
+      #logout {
+        margin-left: auto;
+        border: 1px solid black;
+        background: black;
+        color: white;
+        padding: 10px 15px;
+        border-radius: 10px;
+        text-transform: uppercase;
+      }
       #messages {
         width: 90%;
         max-width: 375px;
@@ -19,7 +43,6 @@
         overflow-y: auto;
         margin-left: auto;
         margin-right: auto;
-        margin-top: 10vh;
         border: 1px solid #ccc;
         border-radius: 24px;
         border: 8px solid #444;
@@ -27,6 +50,7 @@
         padding: 16px;
         background-color: #fff;
         overflow-x: hidden;
+        word-break: break-all;
       }
       .message-row {
         display: grid;
@@ -145,12 +169,15 @@
     </style>
   </head>
   <body onload="firstLoad()">
+    <div id="header">
+      <button id="logout" onclick="logout()">log out</button>
+    </div>
     <div id="messages"></div>
     <form action="">
       <input id="m" autocomplete="off" /><button>Send</button>
     </form>
     <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
-    <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
     <script>
@@ -166,7 +193,7 @@
         if (token) {
           await socket.on('get-username', function (data) {
             if (data.token === token) {
-              $("#messages").prepend("<div class='username-row'> " +
+              $("#header").prepend("<div class='username-row'> " +
                       "<div class='username'>" + data.username +"</div> " +
                       "<div class='online-dot'></div> " +
                       "</div>");
@@ -187,6 +214,10 @@
           $(e).find('.time').addClass("showed");
         }
       }
+      function logout() {
+        $.removeCookie('jwt-token');
+        window.location.href = "/login";
+      }
     </script>
     <script>
       $(function () {
@@ -200,7 +231,7 @@
             return false;
           }
         });
-        socket.on('chatMessage', function(msg){
+        socket.on('chatMessage', function(msg) {
           var sHtml = "";
           sHtml += "      <div class=\"message-row\" onclick='clickMessage(this)'>";
           if (msg.username === $(".username").text()) {
@@ -219,12 +250,13 @@
                     "        </div>\n" +
                     "      </div>";
           $('#messages').append(sHtml);
-          window.scrollTo(0, document.body.scrollHeight);
+          const messages = document.getElementById('messages');
+          messages.scrollTop = messages.scrollHeight;
         });
         socket.on('message', function(msg) {
-          console.log(msg);
           $('#messages').append($('<div class="server-message">').text(msg.text));
-          window.scrollTo(0, document.body.scrollHeight);
+          const messages = document.getElementById('messages');
+          messages.scrollTop = messages.scrollHeight;
         });
       });
     </script>
