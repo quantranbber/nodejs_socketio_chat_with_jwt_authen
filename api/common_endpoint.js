@@ -18,4 +18,8 @@ module.exports = function(app, __dirname) {
     app.get('/login', function (req, res) {
         res.sendFile(__dirname + '/template/html/login.html');
     });
+
+    app.get('/register', function (req, res) {
+       res.sendFile(__dirname + '/template/html/register.html');
+    });
 }

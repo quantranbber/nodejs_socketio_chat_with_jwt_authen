@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+    <div style="display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;">
+        <input style="width: 50%" type="text" id="username" placeholder="username">
+        <select style="width: 50%" name="gender" id="gender">
+            <option value="" selected>--Select gender--</option>
+            <option value="0">Nam</option>
+            <option value="1">Nữ</option>
+            <option value="2">Không xác định</option>
+        </select>
+        <input style="width: 50%" type="password" id="password" placeholder="password">
+        <input style="width: 50%" type="password" id="password-retype" placeholder="retype password">
+        <button id="register">register</button>
+    </div>
+</body>
+<script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
+<script src="https://code.jquery.com/jquery-1.11.1.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
+<script>
+    $(function () {
+        var socket = io();
+        $('#register').click(async function() {
+            if ($("#username").val() === "" || $("#password").val() === "" || $("#gender").val() === "") {
+                alert("Xin điền đủ các trường!");
+                return false;
+            }
+            if ($("#password-retype").val() !== $("#password").val()) {
+                alert("Mật khẩu nhập lại không trùng mật khẩu đã nhập!");
+                return false;
+            }
+            socket = io.connect({'forceNew':true });
+            var data = {};
+            data.username = $("#username").val();
+            data.password = $("#password").val();
+            data.gender = $("#gender").val();
+            socket.emit('register', data);
+            await socket.on('user-existed', function () {
+                alert("user existed");
+            })
+            await socket.on('error-register', function() {
+                alert("Đã có lỗi xảy ra!");
+            });
+            await socket.on('success-register', function (e) {
+                alert("Đăng ký thành công!");
+                e.stopPropagation();
+                return false;
+            });
+            await socket.on('redirect', function(destination) {
+                window.location.href = destination;
+            });
+        });
+    });
+</script>
+</html>

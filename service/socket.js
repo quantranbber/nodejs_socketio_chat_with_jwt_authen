@@ -2,6 +2,7 @@ module.exports = function (io) {
     const jwt = require("jsonwebtoken");
     const formatMessage = require('../utils/messages');
     const secret = process.env.JWT_KEY;
+    const Q = require("q");
 
     //  modify user in database
     const {
@@ -32,6 +33,7 @@ module.exports = function (io) {
         socket.on('login', function (data) {
             getUserByUsername(data.username, (err, results) => {
                 if (err) {
+                    io.emit('error-login-server');
                     console.log(err)
                     return false;
                 }
@@ -65,6 +67,42 @@ module.exports = function (io) {
                         io.emit('error-login');
                         return false;
                     }
+                }
+            });
+        });
+
+        socket.on('register', async function (data) {
+            const salt = genSaltSync(10);
+            data.password = hashSync(data.password, salt);
+            if (data.username === '' || data.password === '' || data.gender === '') {
+                console.log("all fields required");
+                return false;
+            }
+            getUserByUsername(data.username, (err, results) => {
+                var isExist = false;
+                if (results) {
+                    isExist = true;
+                }
+                if (isExist) {
+                    console.log("user existed");
+                    io.emit('user-existed');
+                    return false;
+                } else {
+                    create(data, (err, results) => {
+                        if (err) {
+                            io.emit('error-register');
+                            console.log(err);
+                            return false;
+                        }
+                        if (!results) {
+                            io.emit('error-register');
+                            return false;
+                        } else {
+                            var destination = '/login';
+                            io.emit('success-register');
+                            io.emit('redirect', destination);
+                        }
+                    });
                 }
             });
         });

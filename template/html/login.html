@@ -5,10 +5,15 @@
     <title>Title</title>
 </head>
 <body>
-    <input type="text" id="username" autocomplete="off">
-    <input type="password" id="password" autocomplete="off">
-    <button id="connect">connect</button>
-    <button id="disconnect">disconnect</button>
+    <div style="display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;">
+        <input style="width: 50%" type="text" placeholder="username" id="username" autocomplete="off">
+        <input style="width: 50%" type="password" placeholder="password" id="password" autocomplete="off">
+        <button id="connect">login</button>
+        <a href="/register" id="register">Don't have account?</a>
+    </div>
 </body>
 <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
 <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
@@ -35,21 +40,6 @@
                 window.location.href = destination;
             });
         });
-        // $("form").submit(function () {
-        //     var data = {};
-        //     data.username = $("#username").val();
-        //     data.password = $("#password").val();
-        //     socket.emit('login', data);
-        //     socket.on('error-login', function() {
-        //         alert("Sai tên tài khoản hoặc mật khẩu!!");
-        //     });
-        //     socket.on('auth', function(token) {
-        //         $.cookie("jwt-token", token);
-        //     });
-        //     // socket.on('redirect', function(destination) {
-        //     //     window.location.href = destination;
-        //     // });
-        // })
     })
 </script>
 </html>
