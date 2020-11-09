@@ -107,7 +107,9 @@ module.exports = function (io) {
         });
 
         socket.on('chatMessage', function (msg) {
-            io.emit('chatMessage', msg);
+            const user = getCurrentUser(socket.id);
+
+            io.to(user.room).emit('chatMessage', formatMessage(user.username, msg));
         });
 
         socket.on('join', function (token) {
@@ -118,6 +120,10 @@ module.exports = function (io) {
                     }
                     return false;
                 } else {
+                    var data = {};
+                    data.username = decoded.result.username;
+                    data.token = token;
+                    io.emit('get-username', data);
                     const user = userJoin(socket.id, decoded.result.username, 'activeUsers');
                     socket.join(user.room);
                     socket.broadcast.to(user.room).emit(
