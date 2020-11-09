@@ -50,15 +50,14 @@ module.exports = function (io) {
                         var destination = '/home';
                         io.emit('auth', jsontoken);
                         io.emit('redirect', destination);
-                        const user = userJoin(socket.id, data.username);
-                        socket.broadcast
-                            .to('activeUsers')
-                            .emit(
+                        const user = userJoin(socket.id, data.username, 'activeUsers');
+                        socket.join(user.room);
+                        socket.broadcast.to(user.room).emit(
                                 'message',
                                 formatMessage(botName, `${user.username} has joined the chat`)
-                            );
+                        );
 
-                        io.to('activeUsers').emit('roomUsers', {
+                        io.to(user.room).emit('roomUsers', {
                             room: user.room,
                             users: getRoomUsers(user.room)
                         });
@@ -114,16 +113,18 @@ module.exports = function (io) {
         socket.on('join', function (token) {
             jwt.verify(token, process.env.JWT_KEY, (err, decoded) => {
                 if (err) {
+                    if (err.expiredAt < new Date()) {
+                        io.emit('expired-token');
+                    }
                     return false;
                 } else {
-                    const user = userJoin(socket.id, decoded.result.username);
-                    socket.broadcast
-                        .to('activeUsers')
-                        .emit(
+                    const user = userJoin(socket.id, decoded.result.username, 'activeUsers');
+                    socket.join(user.room);
+                    socket.broadcast.to(user.room).emit(
                             'message',
                             formatMessage(botName, `${decoded.result.username} has rejoined the chat`)
-                        );
-                    io.to('activeUsers').emit('roomUsers', {
+                    );
+                    io.to(user.room).emit('roomUsers', {
                         room: user.room,
                         users: getRoomUsers(user.room)
                     });
@@ -135,7 +136,7 @@ module.exports = function (io) {
         socket.on('disconnect', () => {
             const user = userLeave(socket.id);
             if (user) {
-                io.to('activeUsers').emit(
+                io.to(user.room).emit(
                     'message',
                     formatMessage(botName, `${user.username} has left the chat`)
                 );
