@@ -24,21 +24,21 @@
         $('#disconnect').click(function(){
             socket.disconnect();
         });
-        $('#connect').click(function() {
+        $('#connect').click(async function() {
             socket = io.connect({'forceNew':true });
             var data = {};
             data.username = $("#username").val();
             data.password = $("#password").val();
             socket.emit('login', data);
-            socket.on('error-login', function() {
-                alert("Sai tên tài khoản hoặc mật khẩu!!");
-            });
-            socket.on('auth', function(token) {
-                $.cookie("jwt-token", token);
-            });
-            socket.on('redirect', function(destination) {
-                window.location.href = destination;
-            });
+        });
+        socket.on('error-login', function() {
+            alert("Sai tên tài khoản hoặc mật khẩu!!");
+        });
+        socket.on('auth', function(token) {
+            $.cookie("jwt-token", token);
+        });
+        socket.on('redirect', function(destination) {
+            window.location.href = destination;
         });
     })
 </script>

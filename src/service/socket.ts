@@ -1,6 +1,6 @@
 import socketIo from 'socket.io';
 import jwt, { sign } from 'jsonwebtoken';
-import bcrypt, { hashSync, genSaltSync } from 'bcrypt';
+import { compareSync } from 'bcrypt';
 import UserService from '../api/user/service';
 import UserSocketService from './user';
 import formatMessage from '../utils/messages';
@@ -15,11 +15,11 @@ module.exports = function (io: socketIo.Server) {
     socket.on('login', async (data: { username: string; password: string; }) => {
       const userByName = await UserService.getUserByUsername(data.username);
       if (!userByName) {
-        io.emit('error-login-server');
+        io.emit('error-login');
         return false;
       }
       try {
-        const result = await bcrypt.compare(data.password, userByName.password);
+        const result = compareSync(data.password, userByName.password);
         if (result) {
           userByName.password = undefined;
           const jsontoken = sign({ result: userByName }, secret, {
@@ -52,9 +52,6 @@ module.exports = function (io: socketIo.Server) {
 
     // eslint-disable-next-line consistent-return
     socket.on('register', async (data: any) => {
-      const salt = genSaltSync(10);
-      // eslint-disable-next-line no-param-reassign
-      data.password = hashSync(data.password, salt);
       if (data.username === '' || data.password === '' || data.gender === '') {
         // eslint-disable-next-line no-console
         console.log('all fields required');

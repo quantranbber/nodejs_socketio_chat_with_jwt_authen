@@ -42,20 +42,20 @@
             data.password = $("#password").val();
             data.gender = $("#gender").val();
             socket.emit('register', data);
-            await socket.on('user-existed', function () {
-                alert("user existed");
-            })
-            await socket.on('error-register', function() {
-                alert("Đã có lỗi xảy ra!");
-            });
-            await socket.on('success-register', function (e) {
-                alert("Đăng ký thành công!");
-                e.stopPropagation();
-                return false;
-            });
-            await socket.on('redirect', function(destination) {
-                window.location.href = destination;
-            });
+        });
+        socket.on('user-existed', function () {
+            alert("user existed");
+        })
+        socket.on('error-register', function() {
+            alert("Đã có lỗi xảy ra!");
+        });
+        socket.on('success-register', function (e) {
+            alert("Đăng ký thành công!");
+            e.stopPropagation();
+            return false;
+        });
+        socket.on('redirect', function(destination) {
+            window.location.href = destination;
         });
     });
 </script>
