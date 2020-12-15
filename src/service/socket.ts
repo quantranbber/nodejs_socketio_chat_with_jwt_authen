@@ -5,6 +5,7 @@ import UserService from '../api/user/service';
 import UserSocketService from './user';
 import formatMessage from '../utils/messages';
 import { UserDocument } from '../entity/User';
+import Room, { findRoomByUserIds, RoomDocument } from '../entity/Room';
 
 module.exports = function (io: socketIo.Server) {
   const secret = process.env.JWT_KEY;
@@ -80,6 +81,27 @@ module.exports = function (io: socketIo.Server) {
       const user = UserSocketService.getCurrentUser(socket.id);
 
       io.to(user.room).emit('chatMessage', formatMessage(user.username, msg));
+    });
+
+    socket.on('joinRoom', async username => {
+      const user1 = UserSocketService.getCurrentUser(socket.id);
+      const user1ByName = await UserService.getUserByUsername(user1.username);
+
+      const user2ByName = await UserService.getUserByUsername(username);
+      let room = await findRoomByUserIds(user1ByName._id.toString(), user2ByName._id.toString());
+      if (!room) {
+        const newRoom = {
+          requester: user1ByName._id.toString(),
+          accepter: user2ByName._id.toString()
+        } as RoomDocument;
+        room = new Room(newRoom);
+        room = await room.save();
+      }
+      UserSocketService.userLeave(socket.id);
+      UserSocketService.userJoin(socket.id, user1.username, room._id.toString());
+      socket.join(room._id.toString());
+      socket.leave('activeUsers');
+      io.to(room._id.toString()).emit('message', formatMessage(botName, 'connected!!!'));
     });
 
     socket.on('join', token => {

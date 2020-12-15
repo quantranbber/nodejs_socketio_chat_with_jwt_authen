@@ -16,7 +16,7 @@ class UserSocketService {
     // User leaves chat
     // eslint-disable-next-line consistent-return
     public userLeave(id: string) {
-      const index = this.users.findIndex(user => user.id === id);
+      const index = this.users.findIndex(user => user.id === id && user.room === 'activeUsers');
 
       if (index !== -1) {
         return this.users.splice(index, 1)[0];

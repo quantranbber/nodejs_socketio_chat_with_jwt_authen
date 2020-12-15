@@ -20,7 +20,9 @@ class UserService {
   }
 
   public async getUserByUserId(id: string) {
-    return User.findById(id);
+    return User.findOne({
+      _id: id
+    });
   }
 }
 

@@ -15,4 +15,16 @@ const schema = new Schema({
 
 const Room: Model<RoomDocument> = model<RoomDocument, Model<RoomDocument>>('Room', schema);
 
+export const findRoomByUserIds = async (userId1: string, userId2: string): Promise<RoomDocument> => Room.findOne({
+  $or: [
+    {
+      requester: userId1,
+      accepter: userId2
+    }, {
+      requester: userId2,
+      accepter: userId1
+    }
+  ]
+});
+
 export default Room;

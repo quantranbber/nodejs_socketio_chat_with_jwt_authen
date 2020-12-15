@@ -3,6 +3,7 @@
   <head>
     <title>Socket.IO chat</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.0/css/select2.min.css" rel="stylesheet" />
     <style>
       * { margin: 0; padding: 0; box-sizing: border-box; }
       body { font: 13px Helvetica, Arial; }
@@ -13,11 +14,10 @@
         margin: 0 !important;
       }
       #header {
-        margin: 0 auto;
         display: flex;
         width: 100%;
         max-width: 375px;
-        margin-top: 10vh;
+        margin: 10vh auto 0;
         padding: 20px 10px;
       }
       ::-webkit-scrollbar-thumb {
@@ -43,7 +43,6 @@
         overflow-y: auto;
         margin-left: auto;
         margin-right: auto;
-        border: 1px solid #ccc;
         border-radius: 24px;
         border: 8px solid #444;
         border-bottom-width: 16px;
@@ -166,13 +165,105 @@
         align-items: center;
         margin-bottom: 20px;
       }
+      ul, li, li a {
+        list-style: none;
+        display: block;
+        margin: 0;
+        padding: 0;
+      }
+      #toggle {
+        display: block;
+        width: 28px;
+        height: 30px;
+      }
+
+      #toggle span:after,
+      #toggle span:before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: -9px;
+      }
+      #toggle span:after{
+        top: 9px;
+      }
+      #toggle span {
+        position: relative;
+        display: block;
+      }
+
+      #toggle span,
+      #toggle span:after,
+      #toggle span:before {
+        width: 100%;
+        height: 5px;
+        background-color: #888;
+        transition: all 0.3s;
+        backface-visibility: hidden;
+        border-radius: 2px;
+      }
+
+      /* on activation */
+      #toggle.on span {
+        background-color: transparent;
+      }
+      #toggle.on span:before {
+        transform: rotate(45deg) translate(5px, 5px);
+      }
+      #toggle.on span:after {
+        transform: rotate(-45deg) translate(7px, -8px);
+      }
+      #toggle.on > #menu {
+        opacity: 1;
+        visibility: visible;
+      }
+      /* menu appearance*/
+      #menu {
+        min-height: 100px;
+        top: 10px;
+        position: relative;
+        color: #999;
+        width: 100px;
+        padding: 10px;
+        margin: auto;
+        font-family: "Segoe UI", Candara, "Bitstream Vera Sans", "DejaVu Sans", "Bitstream Vera Sans", "Trebuchet MS", Verdana, "Verdana Ref", sans-serif;
+        text-align: center;
+        border-radius: 4px;
+        background: white;
+        border: 1px solid #888;
+        box-shadow: 0 1px 8px rgba(0,0,0,0.05);
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity .4s;
+      }
+      ul, li, li a {
+        list-style: none;
+        display: block;
+        margin: 0;
+        padding: 10px;
+      }
+      li, a:hover {
+        text-decoration: none !important;
+      }
+      body { margin-top: 3em; background: #eee; color: #555; font-family: "Open Sans", "Segoe UI", Helvetica, Arial, sans-serif; }
+      p, p a { font-size: 12px; text-align: center; color: #888; }
     </style>
   </head>
   <body onload="firstLoad()">
     <div id="header">
+      <select name="" id="searchUser">
+        <option selected value="">-- select user --</option>
+      </select>
       <button id="logout" onclick="logout()">log out</button>
     </div>
-    <div id="messages"></div>
+    <div id="messages">
+      <a href="#menu" id="toggle">
+        <span></span>
+        <div id="menu">
+          <ul></ul>
+        </div>
+      </a>
+    </div>
     <form action="">
       <input id="m" autocomplete="off" /><button>Send</button>
     </form>
@@ -180,9 +271,36 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.0/js/select2.min.js"></script>
     <script>
-      $(document).ready(function(){
+      var theToggle = document.getElementById('toggle');
+      function hasClass(elem, className) {
+        return new RegExp(' ' + className + ' ').test(' ' + elem.className + ' ');
+      }
+      function toggleClass(elem, className) {
+        var newClass = ' ' + elem.className.replace( /[\t\r\n]/g, " " ) + ' ';
+        if (hasClass(elem, className)) {
+          while (newClass.indexOf(" " + className + " ") >= 0 ) {
+            newClass = newClass.replace( " " + className + " " , " " );
+          }
+          elem.className = newClass.replace(/^\s+|\s+$/g, '');
+        } else {
+          elem.className += ' ' + className;
+        }
+      }
+      theToggle.onclick = function() {
+        toggleClass(this, 'on');
+        return false;
+      }
+    </script>
+    <script>
+      $(document).ready(function() {
         $('[data-toggle="tooltip"]').tooltip();
+      });
+    </script>
+    <script>
+      $(document).ready(function() {
+        $("#searchUser").select2();
       });
     </script>
     <script>
@@ -222,7 +340,7 @@
     <script>
       $(function () {
         var socket = io();
-        $('form').submit(function(){
+        $('form').submit(function() {
           if ($('#m').val() === '') {
             return false;
           } else {
@@ -232,6 +350,7 @@
           }
         });
         socket.on('chatMessage', function(msg) {
+          console.log(socket.rooms);
           var sHtml = "";
           sHtml += "      <div class=\"message-row\" onclick='clickMessage(this)'>";
           if (msg.username === $(".username").text()) {
@@ -257,6 +376,20 @@
           $('#messages').append($('<div class="server-message">').text(msg.text));
           const messages = document.getElementById('messages');
           messages.scrollTop = messages.scrollHeight;
+        });
+        socket.on('roomUsers', function (result) {
+          console.log(result);
+          $("#searchUser").html('<option selected value="">-- select user --</option>');
+          if (result.room === 'activeUsers') {
+            result.users.forEach(user => {
+              if ($(".username").text() !== user.username) {
+                $("#searchUser").append('<option value=' + user.username + '>' + user.username + '</option>');
+              }
+            });
+          }
+        });
+        $("#searchUser").on('change', function () {
+          socket.emit('joinRoom', $(this).val());
         });
       });
     </script>
