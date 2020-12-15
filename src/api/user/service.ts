@@ -24,6 +24,12 @@ class UserService {
       _id: id
     });
   }
+
+  public async searchUsersByName(username: string): Promise<UserDocument[]> {
+    return User.find({
+      username: new RegExp(`.*${username.trim()}.*`, 'i')
+    });
+  }
 }
 
 export default new UserService();

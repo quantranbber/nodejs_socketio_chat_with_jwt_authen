@@ -15,12 +15,20 @@ class UserSocketService {
 
     // User leaves chat
     // eslint-disable-next-line consistent-return
-    public userLeave(id: string) {
-      const index = this.users.findIndex(user => user.id === id && user.room === 'activeUsers');
-
-      if (index !== -1) {
-        return this.users.splice(index, 1)[0];
+    public async userLeave(id: string) {
+      const result: any[] = [];
+      const indexs: number[] = await this.users.map((user, index) => {
+        if (user.id === id) {
+          return index;
+        }
+      });
+      for (const index of indexs) {
+        if (index !== -1 && index !== undefined) {
+          result.push(this.users.splice(index, 1)[0]);
+          break;
+        }
       }
+      return result[0];
     }
 
     // Get room users

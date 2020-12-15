@@ -83,6 +83,20 @@ module.exports = function (io: socketIo.Server) {
       io.to(user.room).emit('chatMessage', formatMessage(user.username, msg));
     });
 
+    socket.on('searchUsers', async username => {
+      const users: UserDocument[] = await UserService.searchUsersByName(username);
+
+      const resp: string[] = [];
+      users.forEach(user => {
+        const data = '<a onclick="joinRoom(this)">'
+            + `<div>${user.username}</div>`
+            + '</a>';
+        resp.push(data);
+      });
+
+      io.emit('searchUsers', resp);
+    });
+
     socket.on('joinRoom', async username => {
       const user1 = UserSocketService.getCurrentUser(socket.id);
       const user1ByName = await UserService.getUserByUsername(user1.username);
@@ -97,10 +111,13 @@ module.exports = function (io: socketIo.Server) {
         room = new Room(newRoom);
         room = await room.save();
       }
-      UserSocketService.userLeave(socket.id);
+      await UserSocketService.userLeave(socket.id);
       UserSocketService.userJoin(socket.id, user1.username, room._id.toString());
+      const { rooms } = socket;
+      for (const value of Object.values(rooms)) {
+        socket.leave(value);
+      }
       socket.join(room._id.toString());
-      socket.leave('activeUsers');
       io.to(room._id.toString()).emit('message', formatMessage(botName, 'connected!!!'));
     });
 
@@ -132,8 +149,8 @@ module.exports = function (io: socketIo.Server) {
       });
     });
 
-    socket.on('disconnect', () => {
-      const user = UserSocketService.userLeave(socket.id);
+    socket.on('disconnect', async () => {
+      const user = await UserSocketService.userLeave(socket.id);
       if (user) {
         io.to(user.room).emit(
           'message',

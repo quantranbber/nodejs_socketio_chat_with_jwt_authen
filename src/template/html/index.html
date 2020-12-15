@@ -2,8 +2,10 @@
 <html>
   <head>
     <title>Socket.IO chat</title>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.0/css/select2.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto|Varela+Round">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
     <style>
       * { margin: 0; padding: 0; box-sizing: border-box; }
       body { font: 13px Helvetica, Arial; }
@@ -19,6 +21,8 @@
         max-width: 375px;
         margin: 10vh auto 0;
         padding: 20px 10px;
+        justify-content: center;
+        align-items: center;
       }
       ::-webkit-scrollbar-thumb {
         background: #2b303b;
@@ -108,7 +112,7 @@
       }
       .message--sent .message-bubble {
         background-color: royalblue;
-        color: #fff;
+        color: #fff !important;
       }
       .message-bubble:after {
         display: block;
@@ -163,7 +167,15 @@
       .username-row {
         display: flex;
         align-items: center;
-        margin-bottom: 20px;
+        margin-right: 10px;
+      }
+      #searchKey {
+        height: 50px;
+        width: 120px;
+        padding: 10px;
+        border: none;
+        border-radius: 15px;
+        display: flex;
       }
       ul, li, li a {
         list-style: none;
@@ -243,17 +255,124 @@
         padding: 10px;
       }
       li, a:hover {
+        cursor: pointer !important;
         text-decoration: none !important;
       }
+      .ui-autocomplete {
+        border-radius: 4px;
+        position: fixed !important;
+      }
+
+      .ui-menu {
+        box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
+        background: white !important;
+        z-index: 9999999 !important;
+      }
+
+      .ui-menu-item-wrapper {
+        display: flex !important;
+        width: 100% !important;
+        transition: all 0.5s;
+      }
+
+      .ui-menu-item {
+        width: 100% !important;
+      }
+
+      .ui-state-active,
+      .ui-widget-content .ui-state-active,
+      .ui-widget-header .ui-state-active {
+        border: none !important;
+        background: #ffffff 50% 50% repeat-x;
+        font-weight: normal;
+        color: #212121;
+      }
+      .ui-helper-hidden-accessible {
+        display: none;
+      }
+      .modal-confirm {
+        color: #636363;
+        width: 325px;
+      }
+      .modal-confirm .modal-content {
+        padding: 20px;
+        border-radius: 5px;
+        border: none;
+      }
+      .modal-confirm .modal-header {
+        border-bottom: none;
+        position: relative;
+      }
+      .modal-confirm h4 {
+        text-align: center;
+        font-size: 26px;
+        margin: 30px 0 -15px;
+      }
+      .modal-confirm .form-control, .modal-confirm .btn {
+        min-height: 40px;
+        border-radius: 3px;
+      }
+      .modal-confirm .close {
+        position: absolute;
+        top: -5px;
+        right: -5px;
+      }
+      .modal-confirm .modal-footer {
+        border: none;
+        text-align: center;
+        border-radius: 5px;
+        font-size: 13px;
+      }
+      .modal-confirm .icon-box {
+        color: #fff;
+        position: absolute;
+        margin: 0 auto;
+        left: 0;
+        right: 0;
+        top: -70px;
+        width: 95px;
+        height: 95px;
+        border-radius: 50%;
+        z-index: 9;
+        background: #62bd19;
+        padding: 15px;
+        text-align: center;
+        box-shadow: 0px 2px 2px rgba(0, 0, 0, 0.1);
+      }
+      .modal-confirm .icon-box i {
+        font-size: 56px;
+        position: relative;
+        top: 4px;
+      }
+      .modal-confirm.modal-dialog {
+        margin-top: 80px;
+      }
+      .modal-confirm .btn {
+        color: #fff;
+        border-radius: 4px;
+        background: #62bd19;
+        text-decoration: none;
+        transition: all 0.4s;
+        line-height: normal;
+        border: none;
+      }
+      .modal-confirm .btn:hover, .modal-confirm .btn:focus {
+        outline: none;
+      }
+      .btn-danger {
+        background: darkgreen !important;
+      }
+      .btn-confirm {
+        background: white !important;
+        border: 1px solid #888 !important;
+        color: black !important;
+      }
       body { margin-top: 3em; background: #eee; color: #555; font-family: "Open Sans", "Segoe UI", Helvetica, Arial, sans-serif; }
-      p, p a { font-size: 12px; text-align: center; color: #888; }
     </style>
   </head>
   <body onload="firstLoad()">
     <div id="header">
-      <select name="" id="searchUser">
-        <option selected value="">-- select user --</option>
-      </select>
+      <input type="text" id="searchKey">
       <button id="logout" onclick="logout()">log out</button>
     </div>
     <div id="messages">
@@ -267,11 +386,31 @@
     <form action="">
       <input id="m" autocomplete="off" /><button>Send</button>
     </form>
+    <div id="myModal" class="modal fade">
+      <div class="modal-dialog modal-confirm">
+        <div class="modal-content">
+          <div class="modal-header">
+            <div class="icon-box">
+              <i class="material-icons">&#xe7fe;</i>
+            </div>
+            <h4 class="modal-title w-100">Sorry!</h4>
+          </div>
+          <div class="modal-body">
+            <p class="text-center">Do you want to connect this person?</p>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-confirm btn-block" data-dismiss="modal">Cancel</button>
+            <button class="btn btn-danger btn-block">OK</button>
+          </div>
+        </div>
+      </div>
+    </div>
     <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.0/js/select2.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"></script>
     <script>
       var theToggle = document.getElementById('toggle');
       function hasClass(elem, className) {
@@ -294,23 +433,12 @@
       }
     </script>
     <script>
-      $(document).ready(function() {
-        $('[data-toggle="tooltip"]').tooltip();
-      });
-    </script>
-    <script>
-      $(document).ready(function() {
-        $("#searchUser").select2();
-      });
-    </script>
-    <script>
-      async function firstLoad()
-      {
-        var socket = io();
+      var socket = io();
+      async function firstLoad() {
         var token = $.cookie("jwt-token");
         if (token) {
           await socket.on('get-username', function (data) {
-            if (data.token === token) {
+            if (data.token === token && $('.username').length === 0) {
               $("#header").prepend("<div class='username-row'> " +
                       "<div class='username'>" + data.username +"</div> " +
                       "<div class='online-dot'></div> " +
@@ -322,6 +450,13 @@
           });
           await socket.emit('join', token);
         }
+      }
+      function joinRoom(el) {
+        $('#myModal').modal('show');
+        $('.btn-danger').click(function () {
+          socket.emit('joinRoom', $(el).text());
+          $('#myModal').modal('hide');
+        });
       }
       function clickMessage(e) {
         if ($(e).find('.showed').length > 0) {
@@ -377,20 +512,24 @@
           const messages = document.getElementById('messages');
           messages.scrollTop = messages.scrollHeight;
         });
-        socket.on('roomUsers', function (result) {
-          console.log(result);
-          $("#searchUser").html('<option selected value="">-- select user --</option>');
-          if (result.room === 'activeUsers') {
-            result.users.forEach(user => {
-              if ($(".username").text() !== user.username) {
-                $("#searchUser").append('<option value=' + user.username + '>' + user.username + '</option>');
-              }
+        $("#searchKey").autocomplete({
+          minLength: 1,
+          source: async function (request, response) {
+            await socket.emit('searchUsers', request.term);
+            await socket.on('searchUsers', function (data) {
+              response(data);
             });
+          },
+          select: function (event, ui) {
+            ui.item.value = "";
+            $("#searchKey").val("");
+            return false;
           }
-        });
-        $("#searchUser").on('change', function () {
-          socket.emit('joinRoom', $(this).val());
-        });
+        }).autocomplete("instance")._renderItem = function (ul, item) {
+          return $("<li>")
+                  .append("<div>" + item.label + "</div>")
+                  .appendTo(ul);
+        };
       });
     </script>
   </body>
