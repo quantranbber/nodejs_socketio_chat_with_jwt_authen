@@ -13,6 +13,11 @@ class UserSocketService {
       return this.users.find(user => user.id === id);
     }
 
+    // Get current user
+    public getUserByName(name: string) {
+      return this.users.find(user => user.username === name);
+    }
+
     // User leaves chat
     // eslint-disable-next-line consistent-return
     public async userLeave(id: string) {

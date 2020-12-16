@@ -92,7 +92,7 @@ module.exports = function (io: socketIo.Server) {
       const roomsOfCurrUser: RoomDocument[] = await findRoomByUserId(currUserDb._id.toString());
       users.filter(user => user._id.toString() !== currUserDb._id.toString()).forEach(user => {
         const isInRoom: RoomDocument[] = roomsOfCurrUser.filter(
-          room => room.accepter === user._id.toString() || room.requester === user._id.toString()
+          room => room.accepter.toString() === user._id.toString() || room.requester.toString() === user._id.toString()
         );
         let data = '';
         if (isInRoom.length <= 0) {
@@ -123,10 +123,18 @@ module.exports = function (io: socketIo.Server) {
         } as RoomDocument;
         room = new Room(newRoom);
         room = await room.save();
+        // get user want to connect socket id
+        const user2Connect = UserSocketService.getUserByName(username);
+        if (user2Connect) { // user is online now
+          io.to(user2Connect.id).emit('notification', { user: user1.username });
+        }
+      } else if (room._id.toString() === user1.room) {
+        return;
       }
       await UserSocketService.userLeave(socket.id);
       UserSocketService.userJoin(socket.id, user1.username, room._id.toString());
       const { rooms } = socket;
+      // eslint-disable-next-line no-restricted-syntax
       for (const value of Object.values(rooms)) {
         socket.leave(value);
       }

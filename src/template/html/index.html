@@ -493,6 +493,9 @@
           const messages = document.getElementById('messages');
           messages.scrollTop = messages.scrollHeight;
         });
+        socket.on('notification', function(data) {
+          $('#menu').find('ul').append(`<li>${data.user}</li>`);
+        });
         socket.on('message', function(msg) {
           $('#messages').append($('<div class="server-message">').text(msg.text));
           const messages = document.getElementById('messages');
