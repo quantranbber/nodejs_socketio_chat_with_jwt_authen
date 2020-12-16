@@ -90,7 +90,7 @@ module.exports = function (io: socketIo.Server) {
 
       const resp: string[] = [];
       const roomsOfCurrUser: RoomDocument[] = await findRoomByUserId(currUserDb._id.toString());
-      users.forEach(user => {
+      users.filter(user => user._id.toString() !== currUserDb._id.toString()).forEach(user => {
         const isInRoom: RoomDocument[] = roomsOfCurrUser.filter(
           room => room.accepter === user._id.toString() || room.requester === user._id.toString()
         );
