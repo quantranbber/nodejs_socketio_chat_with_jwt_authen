@@ -27,4 +27,15 @@ export const findRoomByUserIds = async (userId1: string, userId2: string): Promi
   ]
 });
 
+export const findRoomByUserId = async (userId: string): Promise<RoomDocument[]> => Room.find({
+  $or: [
+    {
+      requester: userId
+    },
+    {
+      accepter: userId
+    }
+  ]
+});
+
 export default Room;

@@ -5,7 +5,7 @@ import UserService from '../api/user/service';
 import UserSocketService from './user';
 import formatMessage from '../utils/messages';
 import { UserDocument } from '../entity/User';
-import Room, { findRoomByUserIds, RoomDocument } from '../entity/Room';
+import Room, { findRoomByUserId, findRoomByUserIds, RoomDocument } from '../entity/Room';
 
 module.exports = function (io: socketIo.Server) {
   const secret = process.env.JWT_KEY;
@@ -84,13 +84,26 @@ module.exports = function (io: socketIo.Server) {
     });
 
     socket.on('searchUsers', async username => {
+      const currUser = UserSocketService.getCurrentUser(socket.id);
+      const currUserDb = await UserService.getUserByUsername(currUser.username);
       const users: UserDocument[] = await UserService.searchUsersByName(username);
 
       const resp: string[] = [];
+      const roomsOfCurrUser: RoomDocument[] = await findRoomByUserId(currUserDb._id.toString());
       users.forEach(user => {
-        const data = '<a onclick="joinRoom(this)">'
-            + `<div>${user.username}</div>`
-            + '</a>';
+        const isInRoom: RoomDocument[] = roomsOfCurrUser.filter(
+          room => room.accepter === user._id.toString() || room.requester === user._id.toString()
+        );
+        let data = '';
+        if (isInRoom.length <= 0) {
+          data = '<a data-isNew="yes" onclick="joinRoom(this)">'
+              + `<div>${user.username}</div>`
+              + '</a>';
+        } else {
+          data = '<a data-isNew="no" onclick="joinRoom(this)">'
+              + `<div>${user.username}</div>`
+              + '</a>';
+        }
         resp.push(data);
       });
 

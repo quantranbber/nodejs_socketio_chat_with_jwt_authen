@@ -188,43 +188,6 @@
         width: 28px;
         height: 30px;
       }
-
-      #toggle span:after,
-      #toggle span:before {
-        content: "";
-        position: absolute;
-        left: 0;
-        top: -9px;
-      }
-      #toggle span:after{
-        top: 9px;
-      }
-      #toggle span {
-        position: relative;
-        display: block;
-      }
-
-      #toggle span,
-      #toggle span:after,
-      #toggle span:before {
-        width: 100%;
-        height: 5px;
-        background-color: #888;
-        transition: all 0.3s;
-        backface-visibility: hidden;
-        border-radius: 2px;
-      }
-
-      /* on activation */
-      #toggle.on span {
-        background-color: transparent;
-      }
-      #toggle.on span:before {
-        transform: rotate(45deg) translate(5px, 5px);
-      }
-      #toggle.on span:after {
-        transform: rotate(-45deg) translate(7px, -8px);
-      }
       #toggle.on > #menu {
         opacity: 1;
         visibility: visible;
@@ -242,8 +205,7 @@
         text-align: center;
         border-radius: 4px;
         background: white;
-        border: 1px solid #888;
-        box-shadow: 0 1px 8px rgba(0,0,0,0.05);
+        box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
         opacity: 0;
         visibility: hidden;
         transition: opacity .4s;
@@ -277,8 +239,23 @@
 
       .ui-menu-item {
         width: 100% !important;
+        position: relative;
       }
 
+      .ui-menu-item:hover:after {
+        opacity: 1;
+        right: 5px;
+      }
+      .ui-menu-item:after {
+        font-family: "Material Icons";
+        content: "\e5e1";
+        opacity: 0;
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        transition: all .4s;
+      }
       .ui-state-active,
       .ui-widget-content .ui-state-active,
       .ui-widget-header .ui-state-active {
@@ -345,7 +322,10 @@
         top: 4px;
       }
       .modal-confirm.modal-dialog {
-        margin-top: 80px;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) !important;
       }
       .modal-confirm .btn {
         color: #fff;
@@ -377,7 +357,9 @@
     </div>
     <div id="messages">
       <a href="#menu" id="toggle">
-        <span></span>
+        <span>
+          <i class="material-icons chat_bubble_outline" style="color: #888; font-size: 2.2rem">&#xe0cb;</i>
+        </span>
         <div id="menu">
           <ul></ul>
         </div>
@@ -393,7 +375,7 @@
             <div class="icon-box">
               <i class="material-icons">&#xe7fe;</i>
             </div>
-            <h4 class="modal-title w-100">Sorry!</h4>
+            <h4 class="modal-title w-100">Hi there,</h4>
           </div>
           <div class="modal-body">
             <p class="text-center">Do you want to connect this person?</p>
@@ -452,11 +434,15 @@
         }
       }
       function joinRoom(el) {
-        $('#myModal').modal('show');
-        $('.btn-danger').click(function () {
+        if ($(el)[0].dataset.isnew === 'yes') {
+          $('#myModal').modal('show');
+          $('.btn-danger').click(function () {
+            socket.emit('joinRoom', $(el).text());
+            $('#myModal').modal('hide');
+          });
+        } else {
           socket.emit('joinRoom', $(el).text());
-          $('#myModal').modal('hide');
-        });
+        }
       }
       function clickMessage(e) {
         if ($(e).find('.showed').length > 0) {
