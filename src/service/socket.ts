@@ -3,13 +3,15 @@ import jwt, { sign } from 'jsonwebtoken';
 import { compareSync } from 'bcrypt';
 import UserService from '../api/user/service';
 import UserSocketService from './user';
-import formatMessage from '../utils/messages';
+import MessageService from '../utils/messages';
 import { UserDocument } from '../entity/User';
 import Room, { findRoomByUserId, findRoomByUserIds, RoomDocument } from '../entity/Room';
+import Message, { MessageDocument } from '../entity/Message';
 
 module.exports = function (io: socketIo.Server) {
   const secret = process.env.JWT_KEY;
-  const botName = 'ChatCord Bot';
+  const botName = 'My bot';
+  const publicRoom = 'activeUsers';
 
   io.on('connection', socket => {
     // eslint-disable-next-line consistent-return
@@ -29,11 +31,11 @@ module.exports = function (io: socketIo.Server) {
           const destination = '/home';
           io.emit('auth', jsontoken);
           io.emit('redirect', destination);
-          const user = UserSocketService.userJoin(socket.id, data.username, 'activeUsers');
+          const user = UserSocketService.userJoin(socket.id, data.username, publicRoom);
           socket.join(user.room);
           socket.broadcast.to(user.room).emit(
             'message',
-            formatMessage(botName, `${user.username} has joined the chat`)
+            MessageService.formatMessage(botName, `${user.username} has joined the chat`)
           );
 
           io.to(user.room).emit('roomUsers', {
@@ -77,10 +79,10 @@ module.exports = function (io: socketIo.Server) {
       }
     });
 
-    socket.on('chatMessage', msg => {
+    socket.on('chatMessage', async msg => {
       const user = UserSocketService.getCurrentUser(socket.id);
-
-      io.to(user.room).emit('chatMessage', formatMessage(user.username, msg));
+      await MessageService.sendMessage(io, user, msg, 'CHAT');
+      io.to(user.room).emit('chatMessage', MessageService.formatMessage(user.username, msg));
     });
 
     socket.on('searchUsers', async username => {
@@ -127,6 +129,8 @@ module.exports = function (io: socketIo.Server) {
         const user2Connect = UserSocketService.getUserByName(username);
         if (user2Connect) { // user is online now
           io.to(user2Connect.id).emit('notification', { user: user1.username });
+          await MessageService.sendMessage(io, user1, `You are now connected with ${username}`, 'SYSTEM');
+          io.to(socket.id).emit('message', MessageService.formatMessage(botName, `You are now connected with ${username}`));
         }
       } else if (room._id.toString() === user1.room) {
         return;
@@ -139,7 +143,6 @@ module.exports = function (io: socketIo.Server) {
         socket.leave(value);
       }
       socket.join(room._id.toString());
-      io.to(room._id.toString()).emit('message', formatMessage(botName, 'connected!!!'));
     });
 
     socket.on('join', token => {
@@ -155,11 +158,11 @@ module.exports = function (io: socketIo.Server) {
         data.username = decoded.result.username;
         data.token = token;
         io.emit('get-username', data);
-        const user = UserSocketService.userJoin(socket.id, decoded.result.username, 'activeUsers');
+        const user = UserSocketService.userJoin(socket.id, decoded.result.username, publicRoom);
         socket.join(user.room);
         socket.broadcast.to(user.room).emit(
           'message',
-          formatMessage(botName, `${decoded.result.username} has rejoined the chat`)
+          MessageService.formatMessage(botName, `${decoded.result.username} has rejoined the chat`)
         );
         io.to(user.room).emit('roomUsers', {
           room: user.room,
@@ -175,7 +178,7 @@ module.exports = function (io: socketIo.Server) {
       if (user) {
         io.to(user.room).emit(
           'message',
-          formatMessage(botName, `${user.username} has left the chat`)
+          MessageService.formatMessage(botName, `${user.username} has left the chat`)
         );
 
         io.to(user.room).emit('roomUsers', {
