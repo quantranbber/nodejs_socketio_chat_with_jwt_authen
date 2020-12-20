@@ -4,6 +4,7 @@ import socketIo from 'socket.io';
 import bodyParser from 'body-parser';
 import CookieParser from 'cookie-parser';
 import commonRoutes from './router';
+import * as socket from './service/socket';
 
 const app = express();
 app.use((req, res, next) => {
@@ -30,7 +31,6 @@ app.use(parser.urlencoded({ extended: true }));
 app.use(parser.json());
 
 app.use('/', commonRoutes);
-
-require('./service/socket')(io);
+socket.socketConnect(io);
 
 export default app;

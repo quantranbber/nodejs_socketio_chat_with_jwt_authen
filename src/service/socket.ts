@@ -6,9 +6,8 @@ import UserSocketService from './user';
 import MessageService from '../utils/messages';
 import { UserDocument } from '../entity/User';
 import Room, { findRoomByUserId, findRoomByUserIds, RoomDocument } from '../entity/Room';
-import Message, { MessageDocument } from '../entity/Message';
 
-module.exports = function (io: socketIo.Server) {
+export function socketConnect(io: socketIo.Server) {
   const secret = process.env.JWT_KEY;
   const botName = 'My bot';
   const publicRoom = 'activeUsers';
@@ -81,7 +80,7 @@ module.exports = function (io: socketIo.Server) {
 
     socket.on('chatMessage', async msg => {
       const user = UserSocketService.getCurrentUser(socket.id);
-      await MessageService.sendMessage(io, user, msg, 'CHAT');
+      if (user.room !== publicRoom) await MessageService.sendMessage(io, user, msg, 'CHAT');
       io.to(user.room).emit('chatMessage', MessageService.formatMessage(user.username, msg));
     });
 
@@ -99,12 +98,12 @@ module.exports = function (io: socketIo.Server) {
         let data = '';
         if (isInRoom.length <= 0) {
           data = '<a data-isNew="yes" onclick="joinRoom(this)">'
-              + `<div>${user.username}</div>`
-              + '</a>';
+                + `<div>${user.username}</div>`
+                + '</a>';
         } else {
           data = '<a data-isNew="no" onclick="joinRoom(this)">'
-              + `<div>${user.username}</div>`
-              + '</a>';
+                + `<div>${user.username}</div>`
+                + '</a>';
         }
         resp.push(data);
       });
@@ -191,3 +190,5 @@ module.exports = function (io: socketIo.Server) {
     });
   });
 };
+
+export default { socketConnect };
