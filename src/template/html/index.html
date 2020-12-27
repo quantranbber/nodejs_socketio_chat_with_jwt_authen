@@ -1,5 +1,5 @@
 <!doctype html>
-<html>
+<html lang="">
   <head>
     <title>Socket.IO chat</title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto|Varela+Round">
@@ -431,6 +431,10 @@
             window.location.href = "/login";
           });
           await socket.emit('join', token);
+          await socket.emit('conversations');
+          await socket.on('conversations', function (data) {
+            console.log(data);
+          });
         }
       }
       function joinRoom(el) {

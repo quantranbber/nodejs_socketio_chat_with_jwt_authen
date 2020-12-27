@@ -27,7 +27,7 @@ const cookieParser = CookieParser;
 require('dotenv').config({ path: './process.env' });
 
 app.use(cookieParser());
-app.use(parser.urlencoded({ extended: true }));
+app.use(parser.urlencoded({ extended: false }));
 app.use(parser.json());
 
 app.use('/', commonRoutes);

@@ -3,6 +3,8 @@ import {
 } from 'mongoose';
 
 export class MessageDocument extends Document {
+    room: string;
+
     content: string;
 
     status: string;
@@ -17,6 +19,7 @@ export class MessageDocument extends Document {
 }
 
 const schema = new Schema({
+  room: { type: Schema.Types.ObjectId, ref: 'Room' },
   content: { type: Schema.Types.String, required: true },
   status: { type: Schema.Types.String, required: true, enum: ['READ', 'UNREAD'] },
   type: { type: Schema.Types.String, required: true, enum: ['SYSTEM', 'CHAT'] },

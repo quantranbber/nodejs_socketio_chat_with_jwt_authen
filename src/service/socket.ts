@@ -15,7 +15,7 @@ export function socketConnect(io: socketIo.Server) {
   io.on('connection', socket => {
     // eslint-disable-next-line consistent-return
     socket.on('login', async (data: { username: string; password: string; }) => {
-      const userByName = await UserService.getUserByUsername(data.username);
+      const userByName: UserDocument = await UserService.getUserByUsername(data.username);
       if (!userByName) {
         io.emit('error-login');
         return false;
@@ -50,6 +50,13 @@ export function socketConnect(io: socketIo.Server) {
       } catch (err) {
         return false;
       }
+    });
+
+    socket.on('conversations', async () => {
+      const currentUser = UserSocketService.getCurrentUser(socket.id);
+      const userByName: UserDocument = await UserService.getUserByUsername(currentUser.username);
+      //  get all conversations
+      io.emit('conversations', await MessageService.getAllConversations(userByName._id.toString()));
     });
 
     // eslint-disable-next-line consistent-return
