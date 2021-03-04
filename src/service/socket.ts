@@ -99,11 +99,11 @@ export function socketConnect(io: socketIo.Server) {
       const resp: string[] = [];
       const roomsOfCurrUser: RoomDocument[] = await findRoomByUserId(currUserDb._id.toString());
       users.filter(user => user._id.toString() !== currUserDb._id.toString()).forEach(user => {
-        const isInRoom: RoomDocument[] = roomsOfCurrUser.filter(
+        const isInRoom: boolean = roomsOfCurrUser.some(
           room => room.accepter.toString() === user._id.toString() || room.requester.toString() === user._id.toString()
         );
         let data = '';
-        if (isInRoom.length <= 0) {
+        if (!isInRoom) {
           data = '<a data-isNew="yes" onclick="joinRoom(this)">'
                 + `<div>${user.username}</div>`
                 + '</a>';

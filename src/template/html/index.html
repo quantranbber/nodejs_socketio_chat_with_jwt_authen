@@ -433,7 +433,14 @@
           await socket.emit('join', token);
           await socket.emit('conversations');
           await socket.on('conversations', function (data) {
-            console.log(data);
+            data.forEach(el => {
+              console.log(el);
+              var html = `<div class="room" val=${el.room}>
+                   <div class="number-unread">${el.numberOfUnread}</div>
+                   <div class="content">${el.latestMessage.content}</div>
+              </div>`;
+              $("#menu").append(html);
+            });
           });
         }
       }
